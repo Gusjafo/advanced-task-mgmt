@@ -44,6 +44,34 @@ public sealed class TaskItem : IHasDomainEvents
         AddDomainEvent(new TaskCompletedDomainEvent(Id));
     }
 
+    public void UpdateDetails(string title, DateTime? dueDate, int priority)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Title is required", nameof(title));
+        if (priority < 0) throw new ArgumentOutOfRangeException(nameof(priority));
+        if (Status == TaskStatus.Archived)
+            throw new InvalidOperationException("Archived tasks cannot be modified.");
+
+        Title = title.Trim();
+        DueDate = dueDate;
+        Priority = priority;
+    }
+
+    public void ChangeStatus(TaskStatus status)
+    {
+        if (status == Status) return;
+        if (Status == TaskStatus.Archived)
+            throw new InvalidOperationException("Archived tasks cannot change status.");
+
+        if (status == TaskStatus.Done)
+        {
+            MarkAsDone();
+            return;
+        }
+
+        Status = status;
+    }
+
     private void AddDomainEvent(IDomainEvent @event) => _domainEvents.Add(@event);
     public void ClearDomainEvents() => _domainEvents.Clear();
 }
